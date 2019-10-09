@@ -370,18 +370,17 @@ CGKeyCode findVeeCode() {
 {
     NSLog(@"Start paste");
 
-    CGEventSourceRef sourceRef = CGEventSourceCreate(kCGEventSourceStateHIDSystemState);
+    CGEventSourceRef sourceRef = CGEventSourceCreate(kCGEventSourceStateCombinedSessionState);
     if (!sourceRef) {
        return;
     }
 
-    CGEventFlags flags = (CGEventFlags)0;
     CGEventRef eventDown = CGEventCreateKeyboardEvent(sourceRef, veeCode, true);
+    CGEventFlags flags = CGEventGetFlags(eventDown);
     CGEventSetFlags(eventDown, flags | kCGEventFlagMaskCommand);
-    CGEventPost(kCGHIDEventTap, eventDown);
-    usleep(1000);
     CGEventRef eventUp = CGEventCreateKeyboardEvent(sourceRef, veeCode, false);
-    CGEventPost(kCGHIDEventTap, eventUp);
+    CGEventPost(kCGAnnotatedSessionEventTap, eventDown);
+    CGEventPost(kCGAnnotatedSessionEventTap, eventUp);
     
     CFRelease(eventDown);
     CFRelease(eventUp);
