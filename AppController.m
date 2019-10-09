@@ -19,6 +19,69 @@
 - (void)setCollectionBehavior:(NSWindowCollectionBehavior)behavior;
 @end
 
+
+NSString* keyCodeToString(CGKeyCode keyCode) {
+    // Code taken from https://stackoverflow.com/questions/1918841/how-to-convert-ascii-character-to-cgkeycode
+    TISInputSourceRef currentKeyboard = TISCopyCurrentKeyboardInputSource();
+    CFDataRef uchr = (CFDataRef)TISGetInputSourceProperty(currentKeyboard, kTISPropertyUnicodeKeyLayoutData);
+    const UCKeyboardLayout *keyboardLayout =
+    (const UCKeyboardLayout*)CFDataGetBytePtr(uchr);
+
+    if(keyboardLayout)
+    {
+        UInt32 deadKeyState = 0;
+        UniCharCount maxStringLength = 255;
+        UniCharCount actualStringLength = 0;
+        UniChar unicodeString[maxStringLength];
+
+        OSStatus status = UCKeyTranslate(keyboardLayout,
+                                         keyCode, kUCKeyActionDown, 0,
+                                         LMGetKbdType(), 0,
+                                         &deadKeyState,
+                                         maxStringLength,
+                                         &actualStringLength, unicodeString);
+
+        if (actualStringLength == 0 && deadKeyState)
+        {
+            status = UCKeyTranslate(keyboardLayout,
+                                    kVK_Space, kUCKeyActionDown, 0,
+                                    LMGetKbdType(), 0,
+                                    &deadKeyState,
+                                    maxStringLength,
+                                    &actualStringLength, unicodeString);
+        }
+        if(actualStringLength > 0 && status == noErr)
+            return [[NSString stringWithCharacters:unicodeString
+                                            length:(NSUInteger)actualStringLength] lowercaseString];
+    }
+
+    return nil;
+}
+
+CGKeyCode findVeeCode() {
+    // Under ShortcutRecorder 1, there was a programatic method to determine a keyCode for a given character.
+    // This no longer exists in the 64-bit-compatible ShortcutRecorder 2, so we need to do a quick check to
+    // determine what matches "v"; this is 9 in the default case of English, QWERTY keyboards, which we optimize
+    // for.
+    CGKeyCode testCode = (CGKeyCode)9;
+    unsigned int i;
+    NSString *testVee = keyCodeToString(testCode);
+    if ([testVee isEqualTo:@"v"]) {
+        return testCode;
+    }
+    // Having failed that, iterate through every available keycode, 0-127, until we find "v".
+    for (i = 0; i < 128; ++i) {
+        testCode = (CGKeyCode)i;
+        testVee = keyCodeToString(testCode);
+        if ([testVee isEqualTo:@"v"]) {
+            return testCode;
+        }
+    }
+    // Something has gone tragically wrong. Do our best.
+    return (CGKeyCode)9;
+}
+
+
 @implementation AppController
 
 - (id)init
@@ -117,6 +180,9 @@
                                                   withTitle:@"B "];
     
     clippingStore = clippingNormalStore;
+    
+    veeCode = findVeeCode();
+    NSLog(@"%d", veeCode);
     
 	// Set up the bezel window
     NSSize windowSize = NSMakeSize(325.0, 325.0);
@@ -287,9 +353,9 @@
 	[self performSelector:@selector(hideApp) withObject:nil afterDelay:0.2];
 	if ( [clippingStore jcListCount] > stackPosition ) {
 		[self addClipToPasteboardFromCount:stackPosition movingToTop:NO];
-    	if ( [[NSUserDefaults standardUserDefaults] boolForKey:@"bezelSelectionPastes"] ) {
+    	//if ( [[NSUserDefaults standardUserDefaults] boolForKey:@"bezelSelectionPastes"] ) {
     		[self performSelector:@selector(fakeCommandV) withObject:nil afterDelay:0.2];
-    	}
+    	//}
 	}
 }
 
@@ -301,25 +367,27 @@
 }
 
 -(void)fakeCommandV
-	/*" +fakeCommandV synthesizes keyboard events for Cmd-v Paste 
-	shortcut. "*/ 
-	// Code from a Mark Mason post to Cocoadev-l
-	// What are the flaws in this approach?
-	//  We don't know whether we can really accept the paste
-	//  We have no way of judging whether it's gone through
-	//  Simulating keypresses could have oddball consequences (for instance, if something else was trapping control v)
-	//  Not all apps may take Command-V as a paste command (xemacs, for instance?)
-	// Some sort of AE-based (or System Events-based, or service-based) paste would be preferable in many circumstances.
-	// On the other hand, this doesn't require scripting support, should work for Carbon, etc.
-	// Ideally, in the future, we will be able to tell from what environment JC was passed the trigger
-	// and have different behavior from each.
-{ 
-	NSNumber *keyCode = [srTransformer reverseTransformedValue:@"V"];
-	CGKeyCode veeCode = (CGKeyCode)[keyCode intValue];
-	CGPostKeyboardEvent( (CGCharCode)0, (CGKeyCode)55, true ); // Command down
-	CGPostKeyboardEvent( (CGCharCode)'v', veeCode, true ); // V down 
-	CGPostKeyboardEvent( (CGCharCode)'v', veeCode, false ); //  V up 
-	CGPostKeyboardEvent( (CGCharCode)0, (CGKeyCode)55, false ); // Command up
+{
+    NSLog(@"Start paste");
+
+    CGEventSourceRef sourceRef = CGEventSourceCreate(kCGEventSourceStateHIDSystemState);
+    if (!sourceRef) {
+       return;
+    }
+
+    CGEventFlags flags = (CGEventFlags)0;
+    CGEventRef eventDown = CGEventCreateKeyboardEvent(sourceRef, veeCode, true);
+    CGEventSetFlags(eventDown, flags | kCGEventFlagMaskCommand);
+    CGEventPost(kCGHIDEventTap, eventDown);
+    usleep(1000);
+    CGEventRef eventUp = CGEventCreateKeyboardEvent(sourceRef, veeCode, false);
+    CGEventPost(kCGHIDEventTap, eventUp);
+    
+    CFRelease(eventDown);
+    CFRelease(eventUp);
+    CFRelease(sourceRef);
+
+    NSLog(@"End paste");
 } 
 
 -(void)pollPB:(NSTimer *)timer

@@ -33,6 +33,7 @@
     JumpcutStore                *clippingNormalStore;
     JumpcutStore                *clippingTYStore;
 	
+    CGKeyCode veeCode;
 
     // Status item -- the little icon in the menu bar
     NSStatusItem *statusItem;
@@ -74,6 +75,7 @@
 
 // Hotkey related
 -(void)hitMainHotKey:(PTHotKey *)hotKey;
+-(CGKeyCode) findVeeCod;
 
 // Bezel related
 -(void) showBezel;
