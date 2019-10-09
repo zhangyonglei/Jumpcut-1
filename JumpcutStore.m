@@ -33,18 +33,23 @@
 {
     return [self initRemembering:20
                 displaying:10	
-                withDisplayLength:40 ];
+                withDisplayLength:40
+           withTitle:@"Normal"];
+
 }
 
 -(id) initRemembering:(int)nowRemembering
         displaying:(int)nowDisplaying
         withDisplayLength:(int)displayLength
+            withTitle:(NSString *)title
 {
     [super init];
+    jcTitle = [NSString stringWithString:title];
     jcList = [[NSMutableArray alloc] init];
     [self setRememberNum:nowRemembering];
     [self setDisplayNum:nowDisplaying];
     [self setDisplayLen:displayLength];
+    
     return self;
 }
 
@@ -119,6 +124,11 @@
 -(int) jcListCount
 {
     return [jcList count];
+}
+
+-(NSString *)title
+{
+    return jcTitle;
 }
 
 -(NSString *) clippingContentsAtPosition:(int)index

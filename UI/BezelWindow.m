@@ -39,7 +39,7 @@
 		[textField setDrawsBackground:YES];
 		[textField setBordered:NO];
 		[textField setAlignment:NSCenterTextAlignment];
-		NSRect charFrame = NSMakeRect(([self frame].size.width - (2 * lineHeight)) / 2, 150, 1.75 * lineHeight, 1.75 * lineHeight);
+		NSRect charFrame = NSMakeRect(([self frame].size.width - (3 * 2 * lineHeight)) / 2, 150, 3 * 1.75 * lineHeight, 1.2 * lineHeight);
 		charField = [[RoundRecTextField alloc] initWithFrame:charFrame];
 		[[self contentView] addSubview:charField];
 		[charField setEditable:NO];

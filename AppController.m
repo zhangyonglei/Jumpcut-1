@@ -107,9 +107,17 @@
 		];
 	};
 	// Initialize the JumpcutStore
-	clippingStore = [[JumpcutStore alloc] initRemembering:[[NSUserDefaults standardUserDefaults] integerForKey:@"rememberNum"]
+	clippingNormalStore = [[JumpcutStore alloc] initRemembering:[[NSUserDefaults standardUserDefaults] integerForKey:@"rememberNum"]
 											   displaying:[[NSUserDefaults standardUserDefaults] integerForKey:@"displayNum"]
-										withDisplayLength:_DISPLENGTH];
+										withDisplayLength:_DISPLENGTH
+                                                      withTitle:@"A "];
+    clippingTYStore = [[JumpcutStore alloc] initRemembering:[[NSUserDefaults standardUserDefaults] integerForKey:@"rememberNum"]
+                                                     displaying:[[NSUserDefaults standardUserDefaults] integerForKey:@"displayNum"]
+                                              withDisplayLength:_DISPLENGTH
+                                                  withTitle:@"B "];
+    
+    clippingStore = clippingNormalStore;
+    
 	// Set up the bezel window
     NSSize windowSize = NSMakeSize(325.0, 325.0);
     NSSize screenSize = [[NSScreen mainScreen] frame].size;
@@ -382,28 +390,28 @@
             case NSHomeFunctionKey:
 				if ( [clippingStore jcListCount] > 0 ) {
 					stackPosition = 0;
-					[bezel setCharString:[NSString stringWithFormat:@"%d", stackPosition + 1]];
+					[bezel setCharString:[NSString stringWithFormat:@"%s: %d", [[clippingStore title] UTF8String], stackPosition + 1]];
 					[bezel setText:[clippingStore clippingContentsAtPosition:stackPosition]];
 				}
 				break;
             case NSEndFunctionKey:
 				if ( [clippingStore jcListCount] > 0 ) {
 					stackPosition = [clippingStore jcListCount] - 1;
-					[bezel setCharString:[NSString stringWithFormat:@"%d", stackPosition + 1]];
+					[bezel setCharString:[NSString stringWithFormat:@"%s: %d", [[clippingStore title] UTF8String], stackPosition + 1]];
 					[bezel setText:[clippingStore clippingContentsAtPosition:stackPosition]];
 				}
 				break;
             case NSPageUpFunctionKey:
 				if ( [clippingStore jcListCount] > 0 ) {
 					stackPosition = stackPosition - 10; if ( stackPosition < 0 ) stackPosition = 0;
-					[bezel setCharString:[NSString stringWithFormat:@"%d", stackPosition + 1]];
+					[bezel setCharString:[NSString stringWithFormat:@"%: %d", [[clippingStore title] UTF8String], stackPosition + 1]];
 					[bezel setText:[clippingStore clippingContentsAtPosition:stackPosition]];
 				}
 				break;
 			case NSPageDownFunctionKey:
 				if ( [clippingStore jcListCount] > 0 ) {
 					stackPosition = stackPosition + 10; if ( stackPosition >= [clippingStore jcListCount] ) stackPosition = [clippingStore jcListCount] - 1;
-					[bezel setCharString:[NSString stringWithFormat:@"%d", stackPosition + 1]];
+					[bezel setCharString:[NSString stringWithFormat:@"%s: %d", [[clippingStore title] UTF8String], stackPosition + 1]];
 					[bezel setText:[clippingStore clippingContentsAtPosition:stackPosition]];
 				}
 				break;
@@ -417,16 +425,36 @@
 				newStackPosition = pressed == 0x30 ? 9 : [[NSString stringWithCharacters:&pressed length:1] intValue] - 1;
 				if ( [clippingStore jcListCount] >= newStackPosition ) {
 					stackPosition = newStackPosition;
-					[bezel setCharString:[NSString stringWithFormat:@"%d", stackPosition + 1]];
+					[bezel setCharString:[NSString stringWithFormat:@"%s: %d", [[clippingStore title] UTF8String], stackPosition + 1]];
 					[bezel setText:[clippingStore clippingContentsAtPosition:stackPosition]];
 				}
 				break;
+            case 't': case 'T':
+                [self toggleJCList];
+                break;
             default: // It's not a navigation/application-defined thing, so let's figure out what to do with it.
 //				NSLog(@"PRESSED %d", pressed);
 //				NSLog(@"CODE %d", [mainRecorder keyCombo].code);
 				break;
 		}		
 	}
+}
+
+- (void)toggleJCList
+{
+    if (isBezelDisplayed) {
+        if (clippingStore == clippingTYStore)
+        {
+            clippingStore = clippingNormalStore;
+            NSLog(@"Toggle to Normal JC Store.");
+        } else {
+            clippingStore = clippingTYStore;
+            NSLog(@"Toggle to TY JC Store.");
+        }
+        stackPosition = 0;
+        [self showBezel];
+        [self updateMenu];
+    }
 }
 
 - (void)applicationDidFinishLaunching:(NSNotification *)notification
@@ -438,12 +466,13 @@
 - (void) showBezel
 {
 	if ( [clippingStore jcListCount] > 0 && [clippingStore jcListCount] > stackPosition ) {
-		[bezel setCharString:[NSString stringWithFormat:@"%d", stackPosition + 1]];
+		[bezel setCharString:[NSString stringWithFormat:@"%s: %d", [[clippingStore title] UTF8String], stackPosition + 1]];
 		[bezel setText:[clippingStore clippingContentsAtPosition:stackPosition]];
 	} 
 	if ([bezel respondsToSelector:@selector(setCollectionBehavior:)])
 		[bezel setCollectionBehavior:NSWindowCollectionBehaviorCanJoinAllSpaces];	[bezel makeKeyAndOrderFront:nil];
-	isBezelDisplayed = YES;
+
+    isBezelDisplayed = YES;
 }
 
 - (void) hideBezel
@@ -614,6 +643,7 @@
 	NSRange loadRange;
 	int rangeCap;
 	if ( loadDict != nil ) {
+        // Normal jcList
         savedJCList = [loadDict objectForKey:@"jcList"];
         if ( [savedJCList isKindOfClass:[NSArray class]] ) {
 			// There's probably a nicer way to prevent the range from going out of bounds, but this works.
@@ -621,12 +651,28 @@
 			loadRange = NSMakeRange(0, rangeCap);
 			enumerator = [[savedJCList subarrayWithRange:loadRange] reverseObjectEnumerator];
 			while ( aSavedClipping = [enumerator nextObject] ) {
-				[clippingStore addClipping:[aSavedClipping objectForKey:@"Contents"]
+				[clippingNormalStore addClipping:[aSavedClipping objectForKey:@"Contents"]
 									ofType:[aSavedClipping objectForKey:@"Type"]];
             }
         } else {
-			NSLog(@"Not array");
+			NSLog(@"Not array at Normal List");
 		}
+        
+        // TY jcList
+        savedJCList = [loadDict objectForKey:@"jcTYList"];
+        if ( [savedJCList isKindOfClass:[NSArray class]] ) {
+            // There's probably a nicer way to prevent the range from going out of bounds, but this works.
+            rangeCap = [savedJCList count] < [[NSUserDefaults standardUserDefaults] integerForKey:@"rememberNum"] ? [savedJCList count] : [[NSUserDefaults standardUserDefaults] integerForKey:@"rememberNum"];
+            loadRange = NSMakeRange(0, rangeCap);
+            enumerator = [[savedJCList subarrayWithRange:loadRange] reverseObjectEnumerator];
+            while ( aSavedClipping = [enumerator nextObject] ) {
+                [clippingTYStore addClipping:[aSavedClipping objectForKey:@"Contents"]
+                                    ofType:[aSavedClipping objectForKey:@"Type"]];
+            }
+        } else {
+            NSLog(@"Not array at TY List");
+        }
+        
         [self updateMenu];
         [loadDict release];
     }
@@ -637,12 +683,12 @@
 {
 	stackPosition++;
 	if ( [clippingStore jcListCount] > stackPosition ) {
-		[bezel setCharString:[NSString stringWithFormat:@"%d", stackPosition + 1]];
+		[bezel setCharString:[NSString stringWithFormat:@"%s: %d", [[clippingStore title] UTF8String], stackPosition + 1]];
 		[bezel setText:[clippingStore clippingContentsAtPosition:stackPosition]];
 	} else {
 		if ( [[NSUserDefaults standardUserDefaults] boolForKey:@"wraparoundBezel"] ) {
 			stackPosition = 0;
-			[bezel setCharString:[NSString stringWithFormat:@"%d", 1]];
+			[bezel setCharString:[NSString stringWithFormat:@"%s: %d", [[clippingStore title] UTF8String], 1]];
 			[bezel setText:[clippingStore clippingContentsAtPosition:stackPosition]];
 		} else {
 			stackPosition--;
@@ -656,14 +702,14 @@
 	if ( stackPosition < 0 ) {
 		if ( [[NSUserDefaults standardUserDefaults] boolForKey:@"wraparoundBezel"] ) {
 			stackPosition = [clippingStore jcListCount] - 1;
-			[bezel setCharString:[NSString stringWithFormat:@"%d", stackPosition + 1]];
+			[bezel setCharString:[NSString stringWithFormat:@"%s: %d", [[clippingStore title] UTF8String], stackPosition + 1]];
 			[bezel setText:[clippingStore clippingContentsAtPosition:stackPosition]];
 		} else {
 			stackPosition = 0;
 		}
 	}
 	if ( [clippingStore jcListCount] > stackPosition ) {
-		[bezel setCharString:[NSString stringWithFormat:@"%d", stackPosition + 1]];
+		[bezel setCharString:[NSString stringWithFormat:@"%s: %d", [[clippingStore title] UTF8String], stackPosition + 1]];
 		[bezel setText:[clippingStore clippingContentsAtPosition:stackPosition]];
 	}
 }
@@ -672,6 +718,7 @@
 {
     NSMutableDictionary *saveDict;
     NSMutableArray *jcListArray = [NSMutableArray array];
+    NSMutableArray *jcTYListArray = [NSMutableArray array];
     int i;
     BOOL isDir;
     NSString *path;
@@ -696,16 +743,31 @@
                  forKey:@"displayLen"];
     [saveDict setObject:[NSNumber numberWithInt:[[NSUserDefaults standardUserDefaults] integerForKey:@"displayNum"]]
                  forKey:@"displayNum"];
-    for ( i = 0 ; i < [clippingStore jcListCount]; i++) {
+    for ( i = 0 ; i < [clippingNormalStore jcListCount]; i++) {
 		[jcListArray addObject:[NSDictionary dictionaryWithObjectsAndKeys:
-			[clippingStore clippingContentsAtPosition:i], @"Contents",
-			[clippingStore clippingTypeAtPosition:i], @"Type",
+			[clippingNormalStore clippingContentsAtPosition:i], @"Contents",
+			[clippingNormalStore clippingTypeAtPosition:i], @"Type",
 			[NSNumber numberWithInt:i], @"Position",
 			nil
 			]
 			];
     }
     [saveDict setObject:jcListArray forKey:@"jcList"];
+    for ( i = 0 ; i < [clippingTYStore jcListCount]; i++) {
+        [jcTYListArray addObject:[NSDictionary dictionaryWithObjectsAndKeys:
+            [clippingTYStore clippingContentsAtPosition:i], @"Contents",
+            [clippingTYStore clippingTypeAtPosition:i], @"Type",
+            [NSNumber numberWithInt:i], @"Position",
+            nil
+            ]
+            ];
+    }
+    [saveDict setObject:jcTYListArray forKey:@"jcTYList"];
+    
+    path = [[NSString stringWithString:@"~/Library/Application Support/Jumpcut/JCEngine.save"] stringByExpandingTildeInPath];
+    [saveDict writeToFile:path atomically:YES];
+
+    NSLog(@"Saved JC List.");
 }
 
 - (void)setHotKeyPreferenceForRecorder:(SRRecorderControl *)aRecorder

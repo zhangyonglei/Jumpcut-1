@@ -41,6 +41,7 @@
     int jcRememberNum;		// The max we will allow users to display; 20
     int jcDisplayNum;		// How many the user actually wants to display; defaults to 10
     int jcDisplayLen;		// How many characters to display in the menu; defaults to 37
+    NSString *jcTitle;
     
     // hash -- key values to clippings
     // initially we will use PasteboardCount as the key value, but this will not be guaranteed
@@ -53,7 +54,8 @@
 
 -(id) initRemembering:(int)nowRemembering
         displaying:(int)nowDisplaying
-        withDisplayLength:(int)displayLength;
+        withDisplayLength:(int)displayLength
+            withTitle:(NSString *)title;
 
 // Set various values
 -(void) setRememberNum:(int)nowRemembering;
@@ -63,6 +65,7 @@
 // Retrieve various values
 -(int) displayLen;
 -(int) jcListCount;
+-(NSString *)title;
 -(NSString *) clippingContentsAtPosition:(int)index;
 -(NSString *) clippingDisplayStringAtPosition:(int)index;
 -(NSString *) clippingTypeAtPosition:(int)index;

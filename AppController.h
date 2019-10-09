@@ -30,6 +30,8 @@
 	
 	// The below were pulled in from JumpcutController
 	JumpcutStore				*clippingStore;
+    JumpcutStore                *clippingNormalStore;
+    JumpcutStore                *clippingTYStore;
 	
 
     // Status item -- the little icon in the menu bar
