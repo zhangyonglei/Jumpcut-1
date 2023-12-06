@@ -89,7 +89,7 @@ CGKeyCode findVeeCode() {
 	if ( ! [[NSUserDefaults standardUserDefaults] floatForKey:@"lastRun"] || [[NSUserDefaults standardUserDefaults] floatForKey:@"lastRun"] < 0.6  ) {
 		// A decent starting value for the main hotkey is control-option-V
 		[mainRecorder setKeyCombo:SRMakeKeyCombo(9, 786432)];
-		
+
 		// Something we'd really like is to transfer over info from 0.5x if we can get at it --
 		if ( [[NSUserDefaults standardUserDefaults] persistentDomainForName:@"Jumpcut"] ) {
 			// We need to pull out the relevant objects and stuff them in as proper preferences for the net.sf.Jumpcut domain
@@ -104,7 +104,7 @@ CGKeyCode findVeeCode() {
 				{
 					[[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithInt:2]
 															 forKey:@"savePreference"];
-				} 
+				}
 				else if ( [[[[NSUserDefaults standardUserDefaults] persistentDomainForName:@"Jumpcut"] objectForKey:@"savePreference"] isEqual:@"onExit"] )
 				{
 					[[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithInt:1]
@@ -160,7 +160,7 @@ CGKeyCode findVeeCode() {
 			if ( [[[NSUserDefaults standardUserDefaults] persistentDomainForName:@"Jumpcut"] objectForKey:@"hotkeyModifiers"] != nil )
 			{
 				[mainRecorder setKeyCombo:SRMakeKeyCombo(9, [[[[NSUserDefaults standardUserDefaults] persistentDomainForName:@"Jumpcut"] objectForKey:@"hotkeyModifiers"] intValue])];
-			}	
+			}
 		}
 	}
 	// We no longer get autosave from ShortcutRecorder, so let's set the recorder by hand
@@ -170,20 +170,20 @@ CGKeyCode findVeeCode() {
 		];
 	};
 	// Initialize the JumpcutStore
-	clippingNormalStore = [[JumpcutStore alloc] initRemembering:[[NSUserDefaults standardUserDefaults] integerForKey:@"rememberNum"]
-											   displaying:[[NSUserDefaults standardUserDefaults] integerForKey:@"displayNum"]
+	clippingNormalStore = [[JumpcutStore alloc] initRemembering:(int)[[NSUserDefaults standardUserDefaults] integerForKey:@"rememberNum"]
+											   displaying:(int)[[NSUserDefaults standardUserDefaults] integerForKey:@"displayNum"]
 										withDisplayLength:_DISPLENGTH
                                                       withTitle:@"A "];
-    clippingTYStore = [[JumpcutStore alloc] initRemembering:[[NSUserDefaults standardUserDefaults] integerForKey:@"rememberNum"]
-                                                     displaying:[[NSUserDefaults standardUserDefaults] integerForKey:@"displayNum"]
+    clippingTYStore = [[JumpcutStore alloc] initRemembering:(int)[[NSUserDefaults standardUserDefaults] integerForKey:@"rememberNum"]
+                                                     displaying:(int)[[NSUserDefaults standardUserDefaults] integerForKey:@"displayNum"]
                                               withDisplayLength:_DISPLENGTH
                                                   withTitle:@"B "];
-    
+
     clippingStore = clippingNormalStore;
-    
+
     veeCode = findVeeCode();
     NSLog(@"%d", veeCode);
-    
+
 	// Set up the bezel window
     NSSize windowSize = NSMakeSize(325.0, 325.0);
     NSSize screenSize = [[NSScreen mainScreen] frame].size;
@@ -200,22 +200,22 @@ CGKeyCode findVeeCode() {
 	// Create our pasteboard interface
     jcPasteboard = [NSPasteboard generalPasteboard];
     [jcPasteboard declareTypes:[NSArray arrayWithObject:NSStringPboardType] owner:nil];
-    pbCount = [[NSNumber numberWithInt:[jcPasteboard changeCount]] retain];
+    pbCount = [[NSNumber numberWithInt:(int)[jcPasteboard changeCount]] retain];
 
 	// Build the statusbar menu
     statusItem = [[[NSStatusBar systemStatusBar]
             statusItemWithLength:NSVariableStatusItemLength] retain];
     [statusItem setHighlightMode:YES];
 	if ( [[NSUserDefaults standardUserDefaults] integerForKey:@"menuIcon"] == 1 ) {
-		[statusItem setTitle:[NSString stringWithFormat:@"%C",0x2704]]; 
+		[statusItem setTitle:[NSString stringWithFormat:@"%C",0x2704]];
 	} else if ( [[NSUserDefaults standardUserDefaults] integerForKey:@"menuIcon"] == 2 ) {
-		[statusItem setTitle:[NSString stringWithFormat:@"%C",0x2702]]; 
+		[statusItem setTitle:[NSString stringWithFormat:@"%C",0x2702]];
 	} else {
 		[statusItem setImage:[NSImage imageNamed:@"net.sf.jumpcut.scissors_bw16.png"]];
     }
 	[statusItem setMenu:jcMenu];
     [statusItem setEnabled:YES];
-	
+
     // If our preferences indicate that we are saving, load the dictionary from the saved plist
     // and use it to get everything set up.
 	if ( [[NSUserDefaults standardUserDefaults] integerForKey:@"savePreference"] >= 1 ) {
@@ -227,7 +227,7 @@ CGKeyCode findVeeCode() {
 												  selector:@selector(pollPB:)
 												  userInfo:nil
 												   repeats:YES] retain];
-	
+
     // Finish up
 	srTransformer = [[SRKeyCodeTransformer alloc] init];
     pbBlockCount = [[NSNumber numberWithInt:0] retain];
@@ -257,7 +257,7 @@ CGKeyCode findVeeCode() {
 
 -(IBAction) setBezelAlpha:(id)sender
 {
-	// In a masterpiece of poorly-considered design--because I want to eventually 
+	// In a masterpiece of poorly-considered design--because I want to eventually
 	// allow users to select from a variety of bezels--I've decided to create the
 	// bezel programatically, meaning that I have to go through AppController as
 	// a cutout to allow the user interface to interact w/the bezel.
@@ -268,10 +268,10 @@ CGKeyCode findVeeCode() {
 {
 	if ([sender indexOfSelectedItem] == 1 ) {
 		[statusItem setImage:nil];
-		[statusItem setTitle:[NSString stringWithFormat:@"%C",0x2704]]; 
+		[statusItem setTitle:[NSString stringWithFormat:@"%C",0x2704]];
 	} else if ( [sender indexOfSelectedItem] == 2 ) {
 		[statusItem setImage:nil];
-		[statusItem setTitle:[NSString stringWithFormat:@"%C",0x2702]]; 
+		[statusItem setTitle:[NSString stringWithFormat:@"%C",0x2702]];
 	} else {
 		[statusItem setTitle:@""];
 		[statusItem setImage:[NSImage imageNamed:@"net.sf.jumpcut.scissors_bw16.png"]];
@@ -280,15 +280,17 @@ CGKeyCode findVeeCode() {
 
 -(IBAction) setRememberNumPref:(id)sender
 {
-	int choice;
+	NSInteger choice;
 	int newRemember = [sender intValue];
 	if ( newRemember < [clippingStore jcListCount] &&
 		 ! issuedRememberResizeWarning &&
 		 ! [[NSUserDefaults standardUserDefaults] boolForKey:@"stifleRememberResizeWarning"]
 		 ) {
-		choice = NSRunAlertPanel(NSLocalizedString(@"Resize Stack", @"Alert panel - resize stack - title"), 
+		choice = NSRunAlertPanel(NSLocalizedString(@"Resize Stack", @"Alert panel - resize stack - title"),
 								 NSLocalizedString(@"Resizing the stack to a value below its present size will cause clippings to be lost.", @"Alert panel - resize stack - message"),
-								 NSLocalizedString(@"Resize", @"Alert panel - resize stack - action"), NSLocalizedString(@"Cancel", @"Alert panel - cancel"), NSLocalizedString(@"Don't Warn Me Again", @"Alert panel - don't warn me"));
+								 NSLocalizedString(@"Resize", @"Alert panel - resize stack - action"),
+                                 NSLocalizedString(@"Cancel", @"Alert panel - cancel"),
+                                 NSLocalizedString(@"Don't Warn Me Again", @"Alert panel - don't warn me"));
 		if ( choice == NSAlertAlternateReturn ) {
 			[[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithInt:[clippingStore jcListCount]]
 													 forKey:@"rememberNum"];
@@ -317,7 +319,7 @@ CGKeyCode findVeeCode() {
 
 
 -(IBAction) showPreferencePanel:(id)sender
-{                                    
+{
 	int checkLoginRegistry;
 	if ( vMajor >= 10 && vMinor >= 5 ) {
 		checkLoginRegistry = [UKLoginItemRegistry indexForLoginItemWithPath:[[NSBundle mainBundle] bundlePath]];
@@ -331,7 +333,7 @@ CGKeyCode findVeeCode() {
 		[[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithBool:NO]
 												 forKey:@"loadOnStartup"];
 	}
-	
+
 	if ([prefsPanel respondsToSelector:@selector(setCollectionBehavior:)])
 		[prefsPanel setCollectionBehavior:NSWindowCollectionBehaviorCanJoinAllSpaces];
 	[NSApp activateIgnoringOtherApps: YES];
@@ -375,19 +377,21 @@ CGKeyCode findVeeCode() {
        return;
     }
 
-    CGEventRef eventDown = CGEventCreateKeyboardEvent(sourceRef, veeCode, true);
+    //CGEventRef eventDown = CGEventCreateKeyboardEvent(sourceRef, veeCode, true);
+    CGEventRef eventDown = CGEventCreateKeyboardEvent(sourceRef, kVK_ANSI_V, true);
     CGEventFlags flags = CGEventGetFlags(eventDown);
     CGEventSetFlags(eventDown, flags | kCGEventFlagMaskCommand);
-    CGEventRef eventUp = CGEventCreateKeyboardEvent(sourceRef, veeCode, false);
+    //CGEventRef eventUp = CGEventCreateKeyboardEvent(sourceRef, veeCode, false);
+    CGEventRef eventUp = CGEventCreateKeyboardEvent(sourceRef, kVK_ANSI_V, false);
     CGEventPost(kCGAnnotatedSessionEventTap, eventDown);
     CGEventPost(kCGAnnotatedSessionEventTap, eventUp);
-    
+
     CFRelease(eventDown);
     CFRelease(eventUp);
     CFRelease(sourceRef);
 
     NSLog(@"End paste");
-} 
+}
 
 -(void)pollPB:(NSTimer *)timer
 {
@@ -396,7 +400,7 @@ CGKeyCode findVeeCode() {
         // Reload pbCount with the current changeCount
         // Probably poor coding technique, but pollPB should be the only thing messing with pbCount, so it should be okay
         [pbCount release];
-        pbCount = [[NSNumber numberWithInt:[jcPasteboard changeCount]] retain];
+        pbCount = [[NSNumber numberWithInt:(int)[jcPasteboard changeCount]] retain];
         if ( type != nil ) {
 			NSString *contents = [jcPasteboard stringForType:type];
 			if ( contents == nil ) {
@@ -419,7 +423,6 @@ CGKeyCode findVeeCode() {
             // NSLog(@"Contents: Non-string");
         }
     }
-	
 }
 
 - (void)processBezelKeyDown:(NSEvent *)theEvent
@@ -446,11 +449,11 @@ CGKeyCode findVeeCode() {
 			case 0x3: case 0xD: // Enter or Return
 				[self pasteFromStack];
 				break;
-			case NSUpArrowFunctionKey: 
-			case NSLeftArrowFunctionKey: 
+			case NSUpArrowFunctionKey:
+			case NSLeftArrowFunctionKey:
 				[self stackUp];
 				break;
-			case NSDownArrowFunctionKey: 
+			case NSDownArrowFunctionKey:
 			case NSRightArrowFunctionKey:
 				[self stackDown];
 				break;
@@ -471,7 +474,7 @@ CGKeyCode findVeeCode() {
             case NSPageUpFunctionKey:
 				if ( [clippingStore jcListCount] > 0 ) {
 					stackPosition = stackPosition - 10; if ( stackPosition < 0 ) stackPosition = 0;
-					[bezel setCharString:[NSString stringWithFormat:@"%: %d", [[clippingStore title] UTF8String], stackPosition + 1]];
+					[bezel setCharString:[NSString stringWithFormat:@"%s: %d", [[clippingStore title] UTF8String], stackPosition + 1]];
 					[bezel setText:[clippingStore clippingContentsAtPosition:stackPosition]];
 				}
 				break;
@@ -485,7 +488,7 @@ CGKeyCode findVeeCode() {
 			case NSBackspaceCharacter: break;
             case NSDeleteCharacter: break;
             case NSDeleteFunctionKey: break;
-			case 0x30: case 0x31: case 0x32: case 0x33: case 0x34: 				// Numeral 
+			case 0x30: case 0x31: case 0x32: case 0x33: case 0x34: 				// Numeral
 			case 0x35: case 0x36: case 0x37: case 0x38: case 0x39:
 				// We'll currently ignore the possibility that the user wants to do something with shift.
 				// First, let's set the new stack count to "10" if the user pressed "0"
@@ -499,11 +502,14 @@ CGKeyCode findVeeCode() {
             case 't': case 'T':
                 [self toggleJCList];
                 break;
+            case 's': case 'S':
+                [self saveNormal2TYList];
+                break;
             default: // It's not a navigation/application-defined thing, so let's figure out what to do with it.
 //				NSLog(@"PRESSED %d", pressed);
 //				NSLog(@"CODE %d", [mainRecorder keyCombo].code);
 				break;
-		}		
+		}
 	}
 }
 
@@ -524,6 +530,32 @@ CGKeyCode findVeeCode() {
     }
 }
 
+
+-(void) saveNormal2TYList {
+    if (isBezelDisplayed) {
+        if (clippingStore == clippingNormalStore) {
+            NSString *pbFullText;
+            //NSArray *pbTypes;
+            NSString *pbTypes;
+            if ( (stackPosition + 1) > [clippingStore jcListCount] ) {
+                NSLog(@"Out of bounds request to jcList ignored.");
+                return;
+            }
+            pbFullText = [self clippingStringWithCount:stackPosition];
+            // pbTypes = [NSArray arrayWithObjects:@"NSStringPboardType",NULL];
+            pbTypes = @"NSStringPboardType";
+
+
+            [clippingTYStore addClipping:pbFullText ofType:pbTypes];
+            NSLog(@"Save content to TY JC Store.");
+            [self updateMenu];
+            if ( [[NSUserDefaults standardUserDefaults] integerForKey:@"savePreference"] >= 2 ) {
+                [self saveEngine];
+            }
+        }
+    }
+}
+
 - (void)applicationDidFinishLaunching:(NSNotification *)notification
 {
 	//Create our hot key
@@ -535,7 +567,7 @@ CGKeyCode findVeeCode() {
 	if ( [clippingStore jcListCount] > 0 && [clippingStore jcListCount] > stackPosition ) {
 		[bezel setCharString:[NSString stringWithFormat:@"%s: %d", [[clippingStore title] UTF8String], stackPosition + 1]];
 		[bezel setText:[clippingStore clippingContentsAtPosition:stackPosition]];
-	} 
+	}
 	if ([bezel respondsToSelector:@selector(setCollectionBehavior:)])
 		[bezel setCollectionBehavior:NSWindowCollectionBehaviorCanJoinAllSpaces];	[bezel makeKeyAndOrderFront:nil];
 
@@ -544,6 +576,14 @@ CGKeyCode findVeeCode() {
 
 - (void) hideBezel
 {
+    if (clippingStore == clippingTYStore)
+    {
+        clippingStore = clippingNormalStore;
+        stackPosition = 0;
+        NSLog(@"Toggle to Normal JC Store.");
+    }
+    [self updateMenu];
+
 	[bezel orderOut:nil];
 	[bezel setCharString:@""];
 	isBezelDisplayed = NO;
@@ -593,13 +633,14 @@ CGKeyCode findVeeCode() {
 }
 
 -(IBAction)clearClippingList:(id)sender {
-    int choice;
-	
+    NSInteger choice;
+
 	[NSApp activateIgnoringOtherApps:YES];
-    choice = NSRunAlertPanel(NSLocalizedString(@"Clear Clipping List", @"Alert panel - clear clippings list - title"), 
+    choice = NSRunAlertPanel(NSLocalizedString(@"Clear Clipping List", @"Alert panel - clear clippings list - title"),
 							 NSLocalizedString(@"Do you want to clear all recent clippings?", @"Alert panel - clear clippings list - message"),
-							 NSLocalizedString(@"Clear", @"Alert panel - clear clippings list - message"), NSLocalizedString(@"Cancel", @"Alert panel - cancel"), nil);
-	
+							 NSLocalizedString(@"Clear", @"Alert panel - clear clippings list - message"),
+                             NSLocalizedString(@"Cancel", @"Alert panel - cancel"), nil);
+
     // on clear, zap the list and redraw the menu
     if ( choice == NSAlertDefaultReturn ) {
         [clippingStore clearList];
@@ -616,10 +657,10 @@ CGKeyCode findVeeCode() {
     NSMenuItem *oldItem;
     NSMenuItem *item;
     NSString *pbMenuTitle;
-    NSArray *returnedDisplayStrings = [clippingStore previousDisplayStrings:[[NSUserDefaults standardUserDefaults] integerForKey:@"displayNum"]];
+    NSArray *returnedDisplayStrings = [clippingStore previousDisplayStrings:(int)[[NSUserDefaults standardUserDefaults] integerForKey:@"displayNum"]];
     NSEnumerator *menuEnumerator = [[jcMenu itemArray] reverseObjectEnumerator];
     NSEnumerator *clipEnumerator = [returnedDisplayStrings reverseObjectEnumerator];
-	
+
     //remove clippings from menu
     while( oldItem = [menuEnumerator nextObject] ) {
 		if( [oldItem isSeparatorItem]) {
@@ -628,8 +669,8 @@ CGKeyCode findVeeCode() {
             [jcMenu removeItem:oldItem];
         }
     }
-	
-	
+
+
     while( pbMenuTitle = [clipEnumerator nextObject] ) {
         item = [[NSMenuItem alloc] initWithTitle:pbMenuTitle
 										  action:@selector(processMenuClippingSelection:)
@@ -639,12 +680,12 @@ CGKeyCode findVeeCode() {
         [jcMenu insertItem:item atIndex:0];
         // Way back in 0.2, failure to release the new item here was causing a quite atrocious memory leak.
         [item release];
-	} 
+	}
 }
 
 -(IBAction)processMenuClippingSelection:(id)sender
 {
-    int index=[[sender menu] indexOfItem:sender];
+    int index=(int)[[sender menu] indexOfItem:sender];
 	if ( [[NSUserDefaults standardUserDefaults] boolForKey:@"menuSelectionMovesToTop"] ) {
 		[self addClipToPasteboardFromCount:index movingToTop:YES];
 	} else {
@@ -664,7 +705,7 @@ CGKeyCode findVeeCode() {
     if ( [self isValidClippingNumber:[NSNumber numberWithInt:count]] ) {
         return [clippingStore clippingContentsAtPosition:count];
     } else { // It fails -- we shouldn't be passed this, but...
-        NSLog(@"Asked for non-existant clipping count: %d");
+        NSLog(@"Asked for non-existant clipping count: %d", count);
         return @"";
     }
 }
@@ -688,21 +729,21 @@ CGKeyCode findVeeCode() {
     }
     pbFullText = [self clippingStringWithCount:indexInt];
     pbTypes = [NSArray arrayWithObjects:@"NSStringPboardType",NULL];
-    
+
     [jcPasteboard declareTypes:pbTypes owner:NULL];
-	
+
     [jcPasteboard setString:pbFullText forType:@"NSStringPboardType"];
 	if ( moveBool ) {
-	
+
 	} else {
-		[self setPBBlockCount:[NSNumber numberWithInt:[jcPasteboard changeCount]]];
+		[self setPBBlockCount:[NSNumber numberWithInt:(int)[jcPasteboard changeCount]]];
 	}
 	return true;
 }
 
 -(void) loadEngineFromPList
 {
-    NSString *path = [[NSString stringWithString:@"~/Library/Application Support/Jumpcut/JCEngine.save"] 					stringByExpandingTildeInPath];
+    NSString *path = [[NSString stringWithString:@"~/Library/Application Support/Jumpcut/JCEngine.save"] stringByExpandingTildeInPath];
     NSDictionary *loadDict = [[NSDictionary alloc] initWithContentsOfFile:path];
     NSEnumerator *enumerator;
     NSDictionary *aSavedClipping;
@@ -714,7 +755,7 @@ CGKeyCode findVeeCode() {
         savedJCList = [loadDict objectForKey:@"jcList"];
         if ( [savedJCList isKindOfClass:[NSArray class]] ) {
 			// There's probably a nicer way to prevent the range from going out of bounds, but this works.
-			rangeCap = [savedJCList count] < [[NSUserDefaults standardUserDefaults] integerForKey:@"rememberNum"] ? [savedJCList count] : [[NSUserDefaults standardUserDefaults] integerForKey:@"rememberNum"];
+			rangeCap = [savedJCList count] < (int)[[NSUserDefaults standardUserDefaults] integerForKey:@"rememberNum"] ? (int)[savedJCList count] : (int)[[NSUserDefaults standardUserDefaults] integerForKey:@"rememberNum"];
 			loadRange = NSMakeRange(0, rangeCap);
 			enumerator = [[savedJCList subarrayWithRange:loadRange] reverseObjectEnumerator];
 			while ( aSavedClipping = [enumerator nextObject] ) {
@@ -724,12 +765,12 @@ CGKeyCode findVeeCode() {
         } else {
 			NSLog(@"Not array at Normal List");
 		}
-        
+
         // TY jcList
         savedJCList = [loadDict objectForKey:@"jcTYList"];
         if ( [savedJCList isKindOfClass:[NSArray class]] ) {
             // There's probably a nicer way to prevent the range from going out of bounds, but this works.
-            rangeCap = [savedJCList count] < [[NSUserDefaults standardUserDefaults] integerForKey:@"rememberNum"] ? [savedJCList count] : [[NSUserDefaults standardUserDefaults] integerForKey:@"rememberNum"];
+            rangeCap = [savedJCList count] < [[NSUserDefaults standardUserDefaults] integerForKey:@"rememberNum"] ? (int)[savedJCList count] : (int)[[NSUserDefaults standardUserDefaults] integerForKey:@"rememberNum"];
             loadRange = NSMakeRange(0, rangeCap);
             enumerator = [[savedJCList subarrayWithRange:loadRange] reverseObjectEnumerator];
             while ( aSavedClipping = [enumerator nextObject] ) {
@@ -739,7 +780,7 @@ CGKeyCode findVeeCode() {
         } else {
             NSLog(@"Not array at TY List");
         }
-        
+
         [self updateMenu];
         [loadDict release];
     }
@@ -801,14 +842,14 @@ CGKeyCode findVeeCode() {
 													   nil]
 			];
     }
-	
+
     saveDict = [NSMutableDictionary dictionaryWithCapacity:3];
     [saveDict setObject:@"0.6" forKey:@"version"];
-    [saveDict setObject:[NSNumber numberWithInt:[[NSUserDefaults standardUserDefaults] integerForKey:@"rememberNum"]]
+    [saveDict setObject:[NSNumber numberWithInt:(int)[[NSUserDefaults standardUserDefaults] integerForKey:@"rememberNum"]]
                  forKey:@"rememberNum"];
     [saveDict setObject:[NSNumber numberWithInt:_DISPLENGTH]
                  forKey:@"displayLen"];
-    [saveDict setObject:[NSNumber numberWithInt:[[NSUserDefaults standardUserDefaults] integerForKey:@"displayNum"]]
+    [saveDict setObject:[NSNumber numberWithInt:(int)[[NSUserDefaults standardUserDefaults] integerForKey:@"displayNum"]]
                  forKey:@"displayNum"];
     for ( i = 0 ; i < [clippingNormalStore jcListCount]; i++) {
 		[jcListArray addObject:[NSDictionary dictionaryWithObjectsAndKeys:
@@ -830,7 +871,7 @@ CGKeyCode findVeeCode() {
             ];
     }
     [saveDict setObject:jcTYListArray forKey:@"jcTYList"];
-    
+
     path = [[NSString stringWithString:@"~/Library/Application Support/Jumpcut/JCEngine.save"] stringByExpandingTildeInPath];
     [saveDict writeToFile:path atomically:YES];
 
@@ -842,7 +883,7 @@ CGKeyCode findVeeCode() {
 	if (aRecorder == mainRecorder)
 	{
 		[[NSUserDefaults standardUserDefaults] setObject:
-			[NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:[NSNumber numberWithInt:[mainRecorder keyCombo].code],[NSNumber numberWithInt:[mainRecorder keyCombo].flags],nil] forKeys:[NSArray arrayWithObjects:@"keyCode",@"modifierFlags",nil]]
+			[NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:[NSNumber numberWithInt:(int)[mainRecorder keyCombo].code],[NSNumber numberWithInt:(int)[mainRecorder keyCombo].flags],nil] forKeys:[NSArray arrayWithObjects:@"keyCode",@"modifierFlags",nil]]
 		forKey:@"ShortcutRecorder mainHotkey"];
 	}
 }

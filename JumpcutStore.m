@@ -123,7 +123,7 @@
 
 -(int) jcListCount
 {
-    return [jcList count];
+    return (int)[jcList count];
 }
 
 -(NSString *)title

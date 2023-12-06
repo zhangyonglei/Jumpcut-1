@@ -75,7 +75,7 @@
 
 // Hotkey related
 -(void)hitMainHotKey:(PTHotKey *)hotKey;
--(CGKeyCode) findVeeCod;
+-(CGKeyCode) findVeeCode;
 
 // Bezel related
 -(void) showBezel;
