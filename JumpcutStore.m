@@ -32,7 +32,7 @@
 -(id) init
 {
     return [self initRemembering:20
-                displaying:10	
+                displaying:30
                 withDisplayLength:40
            withTitle:@"Normal"];
 
